@@ -1,0 +1,20 @@
+services:
+  ros2_eval_task:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    stdin_open: true # keep stdin open
+    user: dev # run the container as the ubuntu user
+    environment:
+      - DISPLAY
+      - XAUTHORITY=/tmp/.Xauthority
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - __NV_PRIME_RENDER_OFFLOAD=1
+      - __GLX_VENDOR_LIBRARY_NAME=nvidia
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONPATH=/opt/ros/humble/lib/python3.12/site-packages
+    volumes:
+      - ../ros2_eval_task:/home/dev/ros2_ws/src/ros2_eval_task:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw # share the X11 socket with the host
+      - ~/.Xauthority:/root/.Xauthority # share the Xauthority file with the host
+    container_name: sigma_tasks # name of the container that will be created
