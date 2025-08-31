@@ -45,6 +45,7 @@ ament_target_dependencies(model_spawner_node
 # ----------------- Link the library to the executable -------
 target_link_libraries(model_spawner_node 
   gazebo_utils_client
+  ${OpenCV_LIBS}
 )
 # ---------------- Install the executable -----------------
 install(TARGETS
