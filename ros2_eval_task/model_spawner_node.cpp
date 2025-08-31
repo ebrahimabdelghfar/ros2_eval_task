@@ -25,7 +25,7 @@ public:
         // Get package path to find models and create images directory
         package_path_ = ament_index_cpp::get_package_share_directory("ros2_eval_task");
         std::string models_path = package_path_ + "/models/";
-        images_path_ = package_path_ + "/images/";
+        images_path_ = "/home/dev/ros2_ws/src/ros2_eval_task/images/";
 
         // Create images directory if it doesn't exist
         std::string create_dir_cmd = "mkdir -p " + images_path_;
