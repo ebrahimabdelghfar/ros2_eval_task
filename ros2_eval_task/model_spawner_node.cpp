@@ -75,16 +75,12 @@ private:
         }
         else
         {
-            rclcpp::sleep_for(std::chrono::milliseconds(2000));
             // Convert ROS image to OpenCV image
             cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
             // Generate filename with model name and timestamp
             auto now = std::chrono::system_clock::now();
             auto time_t = std::chrono::system_clock::to_time_t(now);
-            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                          now.time_since_epoch()) %
-                      1000;
-
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) %1000;
             std::stringstream ss;
             ss << std::put_time(std::localtime(&time_t), "%Y%m%d_%H%M%S");
             ss << "_" << std::setfill('0') << std::setw(3) << ms.count();
@@ -103,54 +99,59 @@ private:
 
             // Reset flag after capturing image
             capture_next_image_ = false;
+            image_captured_ = true;
         }
     }
     void timer_callback()
     {
-        // 1. Delete the previous model if it exists
-        if (!last_model_name_.empty())
-        {
-            RCLCPP_INFO(this->get_logger(), "Deleting model: %s", last_model_name_.c_str());
-            gazebo_client_node_->delete_model(last_model_name_);
-        }
-        // 2. Select the next model to spawn
-        current_model_index_ = (current_model_index_ + 1) % model_files_.size();
-        const std::string &model_path = model_files_[current_model_index_];
-        const std::string &model_name = model_base_names_[current_model_index_];
-        // 3. Read model XML content from file
-        std::ifstream file(model_path);
-        if (!file.is_open())
-        {
-            RCLCPP_ERROR(this->get_logger(), "Failed to open model file: %s", model_path.c_str());
-            return;
-        }
-        std::string model_xml((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        file.close();
-        // 4. Generate a random pose
-        last_model_name_ = model_name;
-        geometry_msgs::msg::Pose pose;
-        pose.position.x = x_dist_(rng_);
-        pose.position.y = y_dist_(rng_);
-        pose.position.z = 1.1;
-        pose.orientation.w = 1.0; // No rotation
-        // 3. Spawn the new model
-        RCLCPP_INFO(this->get_logger(), "Spawning model '%s' at [x: %.2f, y: %.2f]",
-                    last_model_name_.c_str(), pose.position.x, pose.position.y);
+        if(image_captured_){
+            // 1. Delete the previous model if it exists
+            if (!last_model_name_.empty())
+            {
+                RCLCPP_INFO(this->get_logger(), "Deleting model: %s", last_model_name_.c_str());
+                gazebo_client_node_->delete_model(last_model_name_);
+            }
+            // 2. Select the next model to spawn
+            current_model_index_ = (current_model_index_ + 1) % model_files_.size();
+            const std::string &model_path = model_files_[current_model_index_];
+            const std::string &model_name = model_base_names_[current_model_index_];
+            // 3. Read model XML content from file
+            std::ifstream file(model_path);
+            if (!file.is_open())
+            {
+                RCLCPP_ERROR(this->get_logger(), "Failed to open model file: %s", model_path.c_str());
+                return;
+            }
+            std::string model_xml((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            file.close();
+            // 4. Generate a random pose
+            last_model_name_ = model_name;
+            geometry_msgs::msg::Pose pose;
+            pose.position.x = x_dist_(rng_);
+            pose.position.y = y_dist_(rng_);
+            pose.position.z = 1.1;
+            pose.orientation.w = 1.0; // No rotation
+            // 3. Spawn the new model
+            RCLCPP_INFO(this->get_logger(), "Spawning model '%s' at [x: %.2f, y: %.2f]",
+                        last_model_name_.c_str(), pose.position.x, pose.position.y);
 
-        bool spawn_success = gazebo_client_node_->spawn_model(last_model_name_, model_xml, pose);
-        // If spawning was successful, trigger image capture
-        if (spawn_success)
-        {
-            RCLCPP_INFO(this->get_logger(), "Model spawned successfully, capturing image...");
-            capture_next_image_ = true;
-        }
-        else
-        {
-            RCLCPP_ERROR(this->get_logger(), "Failed to spawn model '%s'", last_model_name_.c_str());
+            bool spawn_success = gazebo_client_node_->spawn_model(last_model_name_, model_xml, pose);
+            // If spawning was successful, trigger image capture
+            if (spawn_success)
+            {
+                RCLCPP_INFO(this->get_logger(), "Model spawned successfully, capturing image...");
+                rclcpp::sleep_for(std::chrono::milliseconds(3000));
+                image_captured_ = false;
+                capture_next_image_ = true;
+            }
+            else
+            {
+                RCLCPP_ERROR(this->get_logger(), "Failed to spawn model '%s'", last_model_name_.c_str());
+            }
         }
     }
-
     // Member variables
+    bool image_captured_ = true;
     cv_bridge::CvImagePtr cv_ptr;
     std::vector<std::string> model_files_;
     std::vector<std::string> model_base_names_;
