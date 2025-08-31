@@ -18,7 +18,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'world': world_path,
-            'verbose': 'fasle'
+            'verbose': 'false',
         }.items()
     )
 

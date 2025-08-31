@@ -7,6 +7,10 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(OpenCV REQUIRED)
 # ---------------- Install Python Modules ----------------
 ament_python_install_package(${PROJECT_NAME})
 # ---------------- add libraries -------------------------
@@ -23,6 +27,9 @@ ament_target_dependencies(gazebo_utils_client
   rclcpp
   gazebo_msgs
   geometry_msgs
+  ament_index_cpp
+  sensor_msgs
+  cv_bridge
 )
 # ----------------- make the main file excutable ----------
 add_executable(model_spawner_node ros2_eval_task/model_spawner_node.cpp)
@@ -31,6 +38,9 @@ ament_target_dependencies(model_spawner_node
   rclcpp
   geometry_msgs
   gazebo_msgs
+  ament_index_cpp
+  sensor_msgs
+  cv_bridge
 )
 # ----------------- Link the library to the executable -------
 target_link_libraries(model_spawner_node 
