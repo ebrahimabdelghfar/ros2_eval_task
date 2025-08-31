@@ -18,66 +18,59 @@ class ModelSpawnerNode : public rclcpp::Node
 public:
     ModelSpawnerNode() : Node("model_spawner_node")
     {
-        // Initialize the Gazebo client using a separate node for its services
-        rclcpp::NodeOptions options;
-        gazebo_client_node_ = std::make_shared<ros2_eval_task::GazeboUtilsClient>(options);
-
-        // Get package path to find models and create images directory
+        gazebo_client_node_ = std::make_shared<ros2_eval_task::GazeboUtilsClient>();
+        /*--- Get package path to find models ---*/
         package_path_ = ament_index_cpp::get_package_share_directory("ros2_eval_task");
         std::string models_path = package_path_ + "/models/";
         images_path_ = "/home/dev/ros2_ws/src/ros2_eval_task/images/";
-
-        // Create images directory if it doesn't exist
+        /*--- Create images directory if it doesn't exist ---*/
         std::string create_dir_cmd = "mkdir -p " + images_path_;
         std::system(create_dir_cmd.c_str());
 
-        // List of models to spawn
+        /*--- List of models to spawn ---*/
         model_files_ = {
             models_path + "battery_9v_leader/model.sdf",
             models_path + "battery_energizer/model.sdf",
             models_path + "battery_varita/model.sdf",
             models_path + "lipo_battery/model.sdf"};
+        /*--- Base names for models ---*/
         model_base_names_ = {
             "battery_9v_leader",
             "battery_energizer",
             "battery_varita",
             "lipo_battery"};
 
-        // Create image subscriber for one-time captures
+        /*--- Create image subscriber for one-time captures ---*/
         image_subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/camera/image_raw", 10,
             std::bind(&ModelSpawnerNode::image_callback, this, std::placeholders::_1));
 
-        // Create a timer that fires every 5 seconds
+        /*--- Create a timer that fires every 5 seconds ---*/
         timer_ = this->create_wall_timer(
             std::chrono::seconds(5),
             std::bind(&ModelSpawnerNode::timer_callback, this));
 
-        // Create a one-shot timer for delayed image capture (will be set up when needed)
-        // This timer is not started here, but created when model spawning succeeds
-        // Setup random number generation for position
+        /*--- Setup random number generation for position ---*/
         std::random_device rd;
         rng_ = std::mt19937(rd());
         x_dist_ = std::uniform_real_distribution<double>(-0.1, 0.1);
         y_dist_ = std::uniform_real_distribution<double>(-0.1, 0.1);
-
-        RCLCPP_INFO(this->get_logger(), "Model Spawner Node has started.");
+        RCLCPP_INFO(this->get_logger(), "Model Spawner Node has started");
         RCLCPP_INFO(this->get_logger(), "Images will be saved to: %s", images_path_.c_str());
     }
 
 private:
     void image_callback(const sensor_msgs::msg::Image::SharedPtr msg)
     {
-        // Only save image if we're waiting for one (after successful model spawn)
+        /*--- Save Image if model has been spawned ---*/
         if (!capture_next_image_)
         {
             return;
         }
         else
         {
-            // Convert ROS image to OpenCV image
             cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-            // Generate filename with model name and timestamp
+            /*--- Generate filename with model name and timestamp ---*/
             auto now = std::chrono::system_clock::now();
             auto time_t = std::chrono::system_clock::to_time_t(now);
             auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) %1000;
@@ -85,7 +78,6 @@ private:
             ss << std::put_time(std::localtime(&time_t), "%Y%m%d_%H%M%S");
             ss << "_" << std::setfill('0') << std::setw(3) << ms.count();
             std::string filename = images_path_ + model_base_names_[current_model_index_] + "_" + ss.str() + ".png";
-
             // Save image as PNG
             if (cv::imwrite(filename, cv_ptr->image))
             {
@@ -97,7 +89,7 @@ private:
                 RCLCPP_ERROR(this->get_logger(), "Failed to save image: %s", filename.c_str());
             }
 
-            // Reset flag after capturing image
+            // Reset flags after capturing image
             capture_next_image_ = false;
             image_captured_ = true;
         }
@@ -162,7 +154,6 @@ private:
     std::uniform_real_distribution<double> x_dist_;
     std::uniform_real_distribution<double> y_dist_;
     size_t current_model_index_ = -1;
-
     // Image processing members
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscriber_;
     std::string package_path_;

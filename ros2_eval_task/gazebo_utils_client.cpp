@@ -6,8 +6,8 @@ using namespace std::chrono_literals;
 namespace ros2_eval_task
 {
 
-GazeboUtilsClient::GazeboUtilsClient(const rclcpp::NodeOptions & options)
-: rclcpp::Node("gazebo_utils_client_node", options)
+GazeboUtilsClient::GazeboUtilsClient()
+: rclcpp::Node("gazebo_utils_client_node")
 {
   // Create a client for the spawn service
   spawn_client_ = this->create_client<gazebo_msgs::srv::SpawnEntity>("/spawn_entity");
@@ -94,4 +94,4 @@ bool GazeboUtilsClient::delete_model(const std::string & model_name)
   return result->success;
 }
 
-}  // namespace ros2_eval_task
+}

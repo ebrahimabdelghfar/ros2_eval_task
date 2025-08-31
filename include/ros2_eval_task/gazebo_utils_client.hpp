@@ -14,7 +14,7 @@ class GazeboUtilsClient : public rclcpp::Node
 {
 public:
   // Constructor
-  explicit GazeboUtilsClient(const rclcpp::NodeOptions & options);
+  GazeboUtilsClient();
 
   /**
    * @brief Spawns a model in the Gazebo simulation.
