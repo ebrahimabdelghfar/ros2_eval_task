@@ -1,46 +1,50 @@
 #ifndef GAZEBO_UTILS_CLIENT_HPP_
 #define GAZEBO_UTILS_CLIENT_HPP_
 
-#include "rclcpp/rclcpp.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <string>
+#include <memory>
 #include "geometry_msgs/msg/pose.hpp"
 #include "gazebo_msgs/srv/spawn_entity.hpp"
 #include "gazebo_msgs/srv/delete_entity.hpp"
-#include <string>
 
-namespace ros2_eval_task
+namespace sigma
 {
 
-class GazeboUtilsClient : public rclcpp::Node
+class GazeboUtilsClient
 {
 public:
-  // Constructor
-  explicit GazeboUtilsClient(const rclcpp::NodeOptions & options);
+    /**
+     * @brief Construct a new Gazebo Utils Client object
+     * @param node A pointer to the ROS 2 node that will own this client.
+     */
+    explicit GazeboUtilsClient(rclcpp::Node* node); // CHANGED: Now accepts a raw pointer
 
-  /**
-   * @brief Spawns a model in the Gazebo simulation.
-   * @param model_name The name for the new model.
-   * @param model_xml The SDF or URDF content of the model as a string.
-   * @param pose The initial pose (position and orientation) of the model.
-   * @return True if the model was spawned successfully, false otherwise.
-   */
-  bool spawn_model(
-    const std::string & model_name,
-    const std::string & model_xml,
-    const geometry_msgs::msg::Pose & pose);
+    /**
+     * @brief Spawns a model in Gazebo.
+     * @param model_name The name for the spawned model.
+     * @param xml The XML (SDF/URDF) content of the model.
+     * @param pose The pose at which to spawn the model.
+     * @return true if spawning was successful, false otherwise.
+     */
+    bool spawn_model(
+        const std::string &model_name,
+        const std::string &xml,
+        const geometry_msgs::msg::Pose &pose);
 
-  /**
-   * @brief Deletes a model from the Gazebo simulation.
-   * @param model_name The name of the model to delete.
-   * @return True if the model was deleted successfully, false otherwise.
-   */
-  bool delete_model(const std::string & model_name);
+    /**
+     * @brief Deletes a model from Gazebo.
+     * @param model_name The name of the model to delete.
+     * @return true if deletion was successful, false otherwise.
+     */
+    bool delete_model(const std::string &model_name);
 
 private:
-  // Service clients
-  rclcpp::Client<gazebo_msgs::srv::SpawnEntity>::SharedPtr spawn_client_;
-  rclcpp::Client<gazebo_msgs::srv::DeleteEntity>::SharedPtr delete_client_;
+    rclcpp::Node* node_; // CHANGED: Member is now a raw pointer
+    rclcpp::Client<gazebo_msgs::srv::SpawnEntity>::SharedPtr spawn_client_;
+    rclcpp::Client<gazebo_msgs::srv::DeleteEntity>::SharedPtr delete_client_;
 };
 
-}  // namespace ros2_eval_task
+} // namespace sigma
 
-#endif  // GAZEBO_UTILS_CLIENT_HPP_
+#endif // GAZEBO_UTILS_CLIENT_HPP_

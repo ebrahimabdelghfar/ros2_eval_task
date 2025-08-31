@@ -6,7 +6,7 @@ services:
     stdin_open: true # keep stdin open
     user: dev # run the container as the ubuntu user
     environment:
-      - DISPLAY=0
+      - DISPLAY
       - XAUTHORITY=/tmp/.Xauthority
       - QT_X11_NO_MITSHM=1
       - PYTHONPATH=/opt/ros/humble/lib/python3.12/site-packages
